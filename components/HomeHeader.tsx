@@ -8,7 +8,7 @@ import {
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppColors } from "@/constants/theme";
-import Logo from "./logo";
+import Logo from "./Logo";
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
