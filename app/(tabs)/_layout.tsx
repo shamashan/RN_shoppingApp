@@ -19,7 +19,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          
           title: "Home",
           tabBarIcon: ({ color }) => (
             <Ionicons size={28} name="home" color={color} />
@@ -58,6 +57,30 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="favorites"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="product/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="login"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="signup"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
         options={{
           href: null,
         }}

@@ -1,16 +1,14 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
 
-const Favorites = () => {
-
-
+const orders = () => {
   return (
     <View>
-      <Text>Favorite</Text>
+      <Text>order</Text>
     </View>
   );
 };
 
-export default Favorites;
+export default orders;
 
 const styles = StyleSheet.create({});
