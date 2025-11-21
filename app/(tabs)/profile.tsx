@@ -23,7 +23,7 @@ import { supabase } from "@/lib/supabase";
 import Toast from "react-native-toast-message";
 
 const Profile = () => {
-  const { user, logout, checkSession } = useAuthStore();
+  const { user, logout, checkSession, isLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -158,6 +158,7 @@ const Profile = () => {
               fullWidth
               style={styles.logoutButton}
               textStyle={styles.logoutButtonText}
+              disabled={isLoading}
             />
           </View>
         </View>

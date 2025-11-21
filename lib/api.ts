@@ -42,3 +42,39 @@ export const getProduct = async (id: number): Promise<Product> => {
     throw error;
   }
 };
+
+export const getProductByCategory = async (
+  category: string
+): Promise<Product[]> => {
+  try {
+    const response = await fetch(`${API_URL}/products/category/${category}`);
+    if (!response.ok) {
+      throw new Error("Network error!");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error featching product with id ${category}`, error);
+    throw error;
+  }
+};
+
+export const searchProductsApi = async (query: string): Promise<Product[]> => {
+  try {
+    const response = await fetch(`${API_URL}/products`);
+    if (!response.ok) {
+      throw new Error("Network error!");
+    }
+
+    const products = await response.json();
+    const searchTerm = query.toLocaleLowerCase().trim();
+    return products.filter(
+      (product: Product) =>
+        product.title.toLocaleLowerCase().includes(searchTerm) ||
+        product.description.toLocaleLowerCase().includes(searchTerm) ||
+        product.category.toLocaleLowerCase().includes(searchTerm)
+    );
+  } catch (error) {
+    console.error("Error while searching products", error);
+    throw error;
+  }
+};

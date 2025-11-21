@@ -26,9 +26,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="shope"
+        name="shop"
         options={{
-          title: "Shope",
+          title: "Shop",
           tabBarIcon: ({ color }) => (
             <Foundation size={28} name="shopping-cart" color={color} />
           ),
