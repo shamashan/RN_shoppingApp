@@ -21,7 +21,7 @@ interface ProductsState {
   setCategory: (category: string | null) => Promise<void>;
   searchProducts: (query: string) => void;
   sortProducts: (sortBy: "price-asc" | "price-desc" | "rating") => void;
-  // searchProductsRealtime: (query: string) => void;
+  searchProductsRealtime: (query: string) => void;
 }
 
 export const useProductsStore = create<ProductsState>()(
@@ -55,6 +55,7 @@ export const useProductsStore = create<ProductsState>()(
         try {
           set({ selectedCategory: category, loading: true, error: null });
           if (category) {
+            set({ loading: true, error: null });
             const products = await getProductByCategory(category);
             set({ filteredProducts: products, loading: false });
           } else {
@@ -105,7 +106,7 @@ export const useProductsStore = create<ProductsState>()(
         }
         set({ filteredProducts: sorted });
       },
-      searchProductsRealTime: async (query: string) => {
+      searchProductsRealtime: async (query: string) => {
         try {
           set({ loading: true, error: null });
           if (query?.length >= 3) {

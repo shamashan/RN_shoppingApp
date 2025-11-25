@@ -136,7 +136,7 @@ const Profile = () => {
                 key={item.id}
                 style={styles.menuItem}
                 onPress={() => {
-                  item?.onPress;
+                  item?.onPress();
                 }}>
                 <View style={styles.menuItemLeft}>
                   {item.icon}

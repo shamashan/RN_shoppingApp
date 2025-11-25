@@ -26,7 +26,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   compact,
   customStyle,
 }) => {
-  const { id, title, price, category, image } = product;
+  const { id, title, price, category, image, rating } = product;
   function handleAddToCart(): void {
     Toast.show({
       type: "success",
@@ -61,6 +61,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Text>
         <View style={styles.footer}>
           <Text style={styles.price}>${price.toFixed(2)}</Text>
+          <Text style={[styles.ratingText, !compact && { marginBottom: 7 }]}>
+            Rating: {rating?.rate}/{`${rating?.count}`}
+          </Text>
           {!compact && (
             <Button
               title="Add to Cart"
@@ -145,5 +148,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderColor: AppColors.warning,
+  },
+  ratingText: {
+    marginBottom: 8,
+    textTransform: "capitalize",
+    color: AppColors.gray[600],
   },
 });

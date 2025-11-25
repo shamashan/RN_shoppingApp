@@ -1,4 +1,6 @@
 import {
+  FlatList,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -11,13 +13,21 @@ import { supabase } from "@/lib/supabase";
 import { AppColors } from "@/constants/theme";
 import Wrapper from "@/components/Wrapper";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useProductsStore } from "@/store/productStore";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import EmptyState from "@/components/EmptyState";
+import ProductCard from "@/components/ProductCard";
 
 const ShopeScreen = () => {
+  const { q: searchParam, category: categoryParam } = useLocalSearchParams<{
+    q: string;
+    category: string;
+  }>();
+
   const [products, setProducts] = useState([]);
   const [showShortModal, setShowShortModal] = useState(false);
-  const [activeSortOPtion, setActiveSortOption] = useState<string | null>(null);
+  const [activeSortOption, setActiveSortOption] = useState<string | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const {
     categories,
@@ -34,6 +44,9 @@ const ShopeScreen = () => {
   useEffect(() => {
     fetchCategories();
     fetchProducts();
+    if (categoryParam) {
+      setCategory(categoryParam);
+    }
   }, []);
 
   const renderHeader = () => {
@@ -54,8 +67,9 @@ const ShopeScreen = () => {
             </View>
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={() => setShowShortModal(true)}
             style={[
-              styles.sortOption,
+              styles.sortOptionView,
               isFilterActive && styles.activeSortButton,
             ]}>
             <AntDesign name="filter" size={20} color={AppColors.text.primary} />
@@ -68,23 +82,165 @@ const ShopeScreen = () => {
           <TouchableOpacity
             style={[
               styles.categoryButton,
-              selectedCategory === "null" && styles.selectedCategory,
-            ]}>
+              selectedCategory === null && styles.selectedCategory,
+            ]}
+            onPress={() => setCategory(null)}>
             <Text
               style={[
                 styles.categoryText,
-                selectedCategory === "null"
-                  ? styles.selectedCategoryText
-                  : styles.categoryText,
+                selectedCategory === null && styles.selectedCategoryText,
               ]}>
               All
             </Text>
           </TouchableOpacity>
+          {/* Boutons pour chaque catégorie disponible */}
+          {categories?.map((category) => (
+            <TouchableOpacity
+              onPress={() => setCategory(category)}
+              key={category}
+              style={[
+                styles.categoryButton,
+                selectedCategory === category && styles.selectedCategory,
+              ]}>
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === category && styles.selectedCategoryText,
+                ]}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
     );
   };
-  return <Wrapper>{renderHeader()}</Wrapper>;
+
+  if (loading && filteredProducts?.length === 0) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <LoadingSpinner fullScreen />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <Wrapper>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </Wrapper>
+    );
+  }
+
+  function handleSort(sortBy: "price-asc" | "price-desc" | "rating") {
+    sortProducts(sortBy);
+    setActiveSortOption(sortBy);
+    setShowShortModal(false);
+    setIsFilterActive(true);
+  }
+
+  function handleResetFilter() {
+    sortProducts("price-asc");
+    setActiveSortOption(null);
+    setShowShortModal(false);
+    setIsFilterActive(false);
+  }
+
+  return (
+    <Wrapper>
+      {renderHeader()}
+      {loading ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <LoadingSpinner fullScreen />
+        </View>
+      ) : filteredProducts?.length === 0 ? (
+        <EmptyState type="search" message="No products found" />
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          contentContainerStyle={styles.productsGrid}
+          columnWrapperStyle={styles.columnWrapper}
+          showsVerticalScrollIndicator
+          ListEmptyComponent={<View style={styles.footer} />}
+          renderItem={({ item }) => (
+            <View style={styles.productContainer}>
+              <ProductCard product={item} customStyle={{ width: "100%" }} />
+            </View>
+          )}
+        />
+      )}
+      <Modal
+        visible={showShortModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowShortModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Sort by</Text>
+              <TouchableOpacity onPress={() => setShowShortModal(false)}>
+                <AntDesign
+                  name="close"
+                  size={24}
+                  color={AppColors.text.primary}
+                  onPress={() => setShowShortModal(false)}
+                />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.sortOption}
+              onPress={() => handleSort("price-asc")}>
+              <Text
+                style={[
+                  styles.sortOptionText,
+                  activeSortOption === "price-asc" && styles.activeSortText,
+                ]}>
+                Price Ascending
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sortOption}
+              onPress={() => handleSort("price-desc")}>
+              <Text
+                style={[
+                  styles.sortOptionText,
+                  activeSortOption === "price-desc" && styles.activeSortText,
+                ]}>
+                Price Descending
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sortOption}
+              onPress={() => handleSort("rating")}>
+              <Text
+                style={[
+                  styles.sortOptionText,
+                  activeSortOption === "rating" && styles.activeSortText,
+                ]}>
+                Top Rating
+              </Text>
+            </TouchableOpacity>
+            {/* Bouton visible uniquement si un filtre est actif */}
+            {isFilterActive && (
+              <TouchableOpacity
+                style={styles.sortOption}
+                onPress={handleResetFilter}>
+                <Text
+                  style={[styles.sortOptionText, { color: AppColors.error }]}>
+                  Clear filters
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
+    </Wrapper>
+  );
 };
 
 export default ShopeScreen;
@@ -195,6 +351,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
+    marginTop: Platform.OS === "ios" ? 25 : 10,
   },
   modalContent: {
     backgroundColor: AppColors.background.primary,
