@@ -10,9 +10,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppColors } from "@/constants/theme";
 import Logo from "./Logo";
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
+import { useCartStore } from "@/store/cartStore";
+import { useFavoritesStore } from "@/store/favoriteStore";
 
 export default function HomeHeader() {
+  const router = useRouter();
+  const { items } = useCartStore();
+  const { favoriteItems } = useFavoritesStore();
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -21,14 +26,16 @@ export default function HomeHeader() {
           <TouchableOpacity
             style={styles.searchButton}
             onPress={() => router.push("/search")}>
-            <Feather name="search" size={20} color={AppColors.primary[700]} />
+            <Feather name="search" size={20} color={AppColors.text.inverse} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.searchButton}
             onPress={() => router.push("/favorites")}>
-            <Feather name="heart" size={20} color={AppColors.primary[700]} />
+            <Feather name="heart" size={20} color={AppColors.text.inverse} />
             <View style={styles.itemsView}>
-              <Text style={styles.itemsText}>0</Text>
+              <Text style={styles.itemsText}>
+                {favoriteItems?.length ? favoriteItems?.length : 0}
+              </Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -37,10 +44,13 @@ export default function HomeHeader() {
             <MaterialCommunityIcons
               name="cart-outline"
               size={20}
-              color={AppColors.primary[700]}
+              color={AppColors.text.inverse}
             />
             <View style={styles.itemsView}>
-              <Text style={styles.itemsText}>0</Text>
+              <Text style={styles.itemsText}>
+                {" "}
+                {items?.length ? items?.length : 0}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -70,7 +80,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   searchButton: {
-    backgroundColor: AppColors.primary[50],
+    backgroundColor: AppColors.primary[500],
     borderRadius: 5,
     width: 35,
     height: 35,

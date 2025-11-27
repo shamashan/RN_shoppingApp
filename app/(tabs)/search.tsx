@@ -1,5 +1,11 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React, { useRef, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { AppColors } from "@/constants/theme";
 import { useProductsStore } from "@/store/productStore";
 import Wrapper from "@/components/Wrapper";
@@ -7,12 +13,12 @@ import TextInput from "@/components/TextInput";
 import { AntDesign } from "@expo/vector-icons";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import EmptyState from "@/components/EmptyState";
+import ProductCard from "@/components/ProductCard";
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const searchTimeOut = useRef<number | null>(null);
+  const searchTimeOutRef = useRef<number | null>(null);
   const {
-    products,
     filteredProducts,
     loading,
     error,
@@ -20,16 +26,37 @@ const Search = () => {
     searchProductsRealtime,
   } = useProductsStore();
 
-  const renderHeader = () => {
-    function handleSearchChange(text: string): void {
-      setSearchQuery(text);
+  useEffect(() => {
+    if (filteredProducts?.length === 0) {
+      fetchProducts();
     }
+    return () => {
+      if (searchTimeOutRef.current) {
+        clearTimeout(searchTimeOutRef.current);
+      }
+    };
+  }, []);
 
-    function handleClearSearch() {
-      setSearchQuery("");
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (searchTimeOutRef.current) {
+      clearTimeout(searchTimeOutRef.current);
+    }
+    if (searchQuery.length >= 3) {
+      searchTimeOutRef.current = setTimeout(() => {
+        searchProductsRealtime(text);
+      }, 500);
+    } else {
       searchProductsRealtime("");
     }
+  };
 
+  function handleClearSearch() {
+    setSearchQuery("");
+    searchProductsRealtime("");
+  }
+
+  const renderHeader = () => {
     return (
       <View style={styles.header}>
         <Text style={styles.title}>Find a product</Text>
@@ -75,11 +102,27 @@ const Search = () => {
       ) : filteredProducts?.length === 0 && searchQuery ? (
         <EmptyState type="search" message="No products match you search" />
       ) : (
-        <View>
-          <View>
-            <Text>Products</Text>
-          </View>
-        </View>
+        <FlatList
+          data={searchQuery ? filteredProducts : []}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          contentContainerStyle={styles.productsGrid}
+          columnWrapperStyle={styles.columnWrapper}
+          ListEmptyComponent={
+            !searchQuery ? (
+              <View style={styles.emptyStateContainer}>
+                <Text style={styles.emptyStateContainer}>
+                  Insert at least 3 letters to search for a product
+                </Text>
+              </View>
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <View style={styles.productContainer}>
+              <ProductCard product={item} customStyle={{ width: "100%" }} />
+            </View>
+          )}
+        />
       )}
     </Wrapper>
   );
@@ -173,6 +216,7 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: "center",
     justifyContent: "center",
+    textAlign: "center",
   },
   emptyStateText: {
     fontSize: 16,

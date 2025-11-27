@@ -8,12 +8,16 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { Product } from "@/type";
 import { AppColors } from "@/constants/theme";
 import Button from "./Button";
 import Toast from "react-native-toast-message";
 import { router } from "expo-router";
+import Rating from "./Rating";
+import { useCartStore } from "@/store/cartStore";
+import { useFavoritesStore } from "@/store/favoriteStore";
+import { AntDesign } from "@expo/vector-icons";
 
 interface ProductCardProps {
   product: Product;
@@ -27,13 +31,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
   customStyle,
 }) => {
   const { id, title, price, category, image, rating } = product;
+  const { addItem } = useCartStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const isFav = isFavorite(id);
+
   function handleAddToCart(): void {
+    // e.stopPropagation();
+    addItem(product, 1);
     Toast.show({
       type: "success",
       text1: `${title} Added to cart 👋`,
       text2: "Go the the cart to finalize your order",
       visibilityTime: 2000,
     });
+  }
+
+  function handleToggleFavorite(): void {
+    toggleFavorite(product);
   }
 
   function handleProductRoute(e: any): void {
@@ -50,6 +64,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
           style={styles.image}
           resizeMode="contain"
         />
+        <TouchableOpacity
+          onPress={handleToggleFavorite}
+          style={[styles.favoriteButton]}>
+          <AntDesign
+            name="heart"
+            size={18}
+            color={isFav ? AppColors.error : AppColors.text.secondary}
+          />
+        </TouchableOpacity>
       </View>
       <View style={styles.content}>
         <Text>{category}</Text>
@@ -61,9 +84,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Text>
         <View style={styles.footer}>
           <Text style={styles.price}>${price.toFixed(2)}</Text>
-          <Text style={[styles.ratingText, !compact && { marginBottom: 7 }]}>
-            Rating: {rating?.rate}/{`${rating?.count}`}
-          </Text>
+          <View style={!compact && { marginBottom: 7 }}>
+            <Rating rating={rating?.rate} count={rating?.count}></Rating>
+          </View>
           {!compact && (
             <Button
               title="Add to Cart"
@@ -147,7 +170,7 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: "center",
     alignItems: "center",
-    borderColor: AppColors.warning,
+    borderColor: AppColors.error,
   },
   ratingText: {
     marginBottom: 8,
