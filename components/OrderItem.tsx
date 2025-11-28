@@ -1,0 +1,187 @@
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import React, { useState } from "react";
+import { AppColors } from "@/constants/theme";
+import { Feather } from "@expo/vector-icons";
+
+interface Order {
+  id: number;
+  total_price: number;
+  payment_status: string;
+  created_at: string;
+  items: {
+    product_id: number;
+    title: string;
+    price: number;
+    quantity: number;
+    image: string;
+  }[];
+}
+
+interface Props {
+  order: Order;
+  onDelete: (id: number) => void;
+  email: string | undefined;
+  onViewDetails: (order: Order) => void;
+}
+
+const OrderItem = ({ order, onDelete, email }: Props) => {
+  const isPaid = order?.payment_status === "success";
+  const [loading, setLoading] = useState(false);
+
+  function handlePayNow() {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleDelete(): void {
+    Alert.alert(
+      "Delete Order",
+      `Are you sure you want to delete order #${order?.id}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => onDelete(order?.id),
+        },
+      ]
+    );
+  }
+
+  return (
+    <View style={styles.orderView}>
+      <View style={styles.orderItem}>
+        <Text style={styles.orderId}>Order #{order?.id}</Text>
+        <Text>Total: ${order?.total_price.toFixed(2)}</Text>
+        <Text
+          style={[
+            styles.orderStatus,
+            { color: isPaid ? AppColors.success : AppColors.error },
+          ]}>
+          Status: {isPaid ? "Paid" : "Pending"}
+        </Text>
+        <Text style={styles.orderDate}>
+          Order Date: {new Date(order.created_at).toLocaleDateString()}
+        </Text>
+        {!isPaid && (
+          <TouchableOpacity onPress={handlePayNow} style={styles.payNowButton}>
+            {loading ? (
+              <ActivityIndicator
+                size="small"
+                color={AppColors.background.primary}
+              />
+            ) : (
+              <Text style={styles.payNowText}>Pay Now</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+      {order?.items[0]?.image && (
+        <Image source={{ uri: order?.items[0].image }} style={styles.image} />
+      )}
+      <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+        <Feather name="trash-2" color={AppColors.error} size={20} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default OrderItem;
+
+const styles = StyleSheet.create({
+  orderView: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    backgroundColor: AppColors.background.primary,
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: AppColors.gray[200],
+  },
+  orderItem: {
+    flex: 1,
+  },
+  orderId: {
+    fontFamily: "Inter-Bold",
+    fontSize: 16,
+    color: AppColors.text.primary,
+    marginBottom: 4,
+  },
+  orderTotal: {
+    fontFamily: "Inter-Medium",
+    fontSize: 16,
+    color: AppColors.text.primary,
+    marginBottom: 4,
+  },
+  orderStatus: {
+    fontFamily: "Inter-Regular",
+    fontSize: 14,
+    color: AppColors.text.secondary,
+    marginBottom: 4,
+  },
+  orderDate: {
+    fontFamily: "Inter-Regular",
+    fontSize: 12,
+    color: AppColors.text.secondary,
+  },
+  image: {
+    width: 80,
+    height: 80,
+    resizeMode: "contain",
+    marginLeft: 12,
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 12,
+  },
+  payNowButton: {
+    marginTop: 8,
+    backgroundColor: AppColors.primary[500],
+    paddingVertical: 6,
+    width: 80,
+    borderRadius: 4,
+    alignSelf: "flex-start",
+    // justifyContent: 'center',
+    alignItems: "center",
+  },
+  payNowText: {
+    fontFamily: "Inter-Medium",
+    color: AppColors.background.primary,
+    fontSize: 14,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: 12,
+    marginTop: 8,
+  },
+  viewDetailsText: {
+    fontFamily: "Inter-Medium",
+    color: "#fff",
+    fontSize: 14,
+  },
+  viewDetailsButton: {
+    backgroundColor: AppColors.primary[600],
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+});
