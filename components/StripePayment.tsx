@@ -76,5 +76,3 @@ const StripePayment = ({
 };
 
 export default StripePayment;
-
-const styles = StyleSheet.create({});
