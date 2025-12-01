@@ -91,6 +91,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="delivery_address"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

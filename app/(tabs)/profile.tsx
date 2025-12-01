@@ -74,7 +74,7 @@ const Profile = () => {
       id: "address",
       title: "Delivery Address",
       icon: <Foundation name="home" size={20} color={AppColors.primary[500]} />,
-      onPress: () => {},
+      onPress: () => router.push("/(tabs)/delivery_address"),
     },
     {
       id: "settings",

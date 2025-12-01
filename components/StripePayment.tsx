@@ -37,9 +37,9 @@ const StripePayment = ({
     }
   };
   const updatePaymentStatus = async () => {
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from("orders")
-      .update({ payment_status: "success" })
+      .update({ payment_status: "Paid" })
       .eq("id", orderId)
       .select();
 

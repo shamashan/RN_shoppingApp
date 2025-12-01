@@ -10,6 +10,8 @@ import {
 import React, { useState } from "react";
 import { AppColors } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
+import axios from "axios";
+import { useRouter } from "expo-router";
 
 interface Order {
   id: number;
@@ -32,12 +34,53 @@ interface Props {
   onViewDetails: (order: Order) => void;
 }
 
-const OrderItem = ({ order, onDelete, email }: Props) => {
-  const isPaid = order?.payment_status === "success";
+const OrderItem = ({ order, onDelete, onViewDetails, email }: Props) => {
+  const isPaid = order?.payment_status === "Paid";
   const [loading, setLoading] = useState(false);
+  const [disable, setDisable] = useState(false);
+  const BASE_URL = "http://localhost:8000";
+  const router = useRouter();
 
-  function handlePayNow() {
-    throw new Error("Function not implemented.");
+  async function handlePayNow() {
+    setLoading(true);
+    setDisable(true);
+    const payload = {
+      price: order?.total_price,
+      email: email,
+    };
+    try {
+      const response = await axios.post(`${BASE_URL}/checkout`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const { paymentIntent, ephemeralKey, customer } = response.data;
+      if (response?.data) {
+        Alert.alert("Pay now", `Payment for order #${order?.id}`, [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Pay",
+            style: "destructive",
+            onPress: () => {
+              router.push({
+                pathname: "/(tabs)/payment",
+                params: {
+                  paymentIntent,
+                  ephemeralKey,
+                  customer,
+                  orderId: order?.id,
+                  total: order?.total_price,
+                },
+              });
+            },
+          },
+        ]);
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+      setDisable(false);
+    }
   }
 
   function handleDelete(): void {
@@ -65,26 +108,37 @@ const OrderItem = ({ order, onDelete, email }: Props) => {
             styles.orderStatus,
             { color: isPaid ? AppColors.success : AppColors.error },
           ]}>
-          Status: {isPaid ? "Paid" : "Pending"}
+          Statut: {isPaid ? "Paid" : "Pending"}
         </Text>
         <Text style={styles.orderDate}>
-          Order Date: {new Date(order.created_at).toLocaleDateString()}
+          Order Date:
+          {new Date(order.created_at).toLocaleDateString()}
         </Text>
-        {!isPaid && (
-          <TouchableOpacity onPress={handlePayNow} style={styles.payNowButton}>
-            {loading ? (
-              <ActivityIndicator
-                size="small"
-                color={AppColors.background.primary}
-              />
-            ) : (
-              <Text style={styles.payNowText}>Pay Now</Text>
-            )}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            onPress={() => onViewDetails(order)}
+            style={styles.viewDetailsButton}>
+            <Text style={styles.viewDetailsText}>Details</Text>
           </TouchableOpacity>
-        )}
+          {!isPaid && (
+            <TouchableOpacity
+              disabled={disable}
+              onPress={handlePayNow}
+              style={styles.payNowButton}>
+              {loading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={AppColors.background.primary}
+                />
+              ) : (
+                <Text style={styles.payNowText}>Pay</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       {order?.items[0]?.image && (
-        <Image source={{ uri: order?.items[0].image }} style={styles.image} />
+        <Image source={{ uri: order?.items[0]?.image }} style={styles.image} />
       )}
       <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
         <Feather name="trash-2" color={AppColors.error} size={20} />
